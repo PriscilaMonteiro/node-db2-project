@@ -1,6 +1,7 @@
 const db = require('../../data/db-config')
 const Car = require('./cars-model')
-const yup = require('yup')
+const {carSchema} = require('./schema')
+var vinValidator = require('vin-validator')
 
 // eslint-disable-next-line no-unused-vars
 function handleError(err, req, res, next) {
@@ -17,7 +18,7 @@ async function checkCarId (req, res, next) {
       req.car = car
       next()
     } else {
-      next({ status:404, message: 'car not found'})
+      next({ status:404, message: `car with id ${id} is not found`})
     }
   } catch (err) {
     next(err);
@@ -25,47 +26,54 @@ async function checkCarId (req, res, next) {
 }
 
 
-const carSchema = yup.object().shape({
-  vin:yup
-    .string()
-    .typeError('vin needs to be a string')
-    .required('vin is missing'),
-  make:yup
-    .string()
-    .typeError('make needs to be a string')
-    .required('make is missing'),
-  model:yup
-    .string()
-    .typeError('model needs to be a string')
-    .required('model is missing'),
-  mileage:yup
-    .number()
-    .typeError('mileage needs to be a positive number')
-    .positive()
-    .required('mileage is missing'),
-  title:yup
-    .string()
-    .typeError('title needs to be a string'),
-  transmission:yup
-    .string()
-    .typeError('transmission needs to be a string'),
-})
-
-
-
-const checkCarPayload = (req, res, next) => {
-  // DO YOUR MAGIC
+async function checkCarPayload(req, res, next) {
+  try {
+    const validated = await carSchema.validate(
+      req.body,
+      { strict: false, stripUnknown: true }
+    )
+    req.body = validated
+    next();
+  } catch (err) {
+    next({ message: `${err.message}`, status: 400 });
+  }
 }
 
-const checkVinNumberValid = (req, res, next) => {
-  // DO YOUR MAGIC
+async function checkVinNumberValid(req, res, next) {
+  const { vin } = req.body;
+  try {
+    const validatedVin = await Car.getById(vin)
+    if (!validatedVin) {
+      next({ status: 400, message: `vin ${vin} is invalid` })
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
+  }
 }
 
-const checkVinNumberUnique = (req, res, next) => {
-  // DO YOUR MAGIC
+async function checkVinNumberUnique(req, res, next) {
+  const { vin } = req.body;
+  try {
+    const notUniqueVin = await db('cars')
+      .where('vin', vin)
+      .first()
+    if (notUniqueVin) {
+      next({ status: 400, message: `vin ${vin} already exists` })
+    } else {
+      next();
+    }
+  } catch (err) {
+    next(err);
+  }
 }
+
 
 module.exports = {
   handleError,
   checkCarId,
+  checkCarPayload,
+  checkVinNumberValid,
+  checkVinNumberUnique,
 }
