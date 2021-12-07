@@ -39,19 +39,35 @@ async function checkCarPayload(req, res, next) {
   }
 }
 
-async function checkVinNumberValid(req, res, next) {
-  const { vin } = req.body;
-  try {
-    const validatedVin = await Car.getById(vin)
-    if (!validatedVin) {
-      next({ status: 400, message: `vin ${vin} is invalid` })
-    } else {
-      next();
-    }
-  } catch (err) {
-    next(err);
+const checkVinNumberValid = (req, res, next) => {
+  if (vinValidator.validate(req.body.vin)) {
+    next()
+  } else {
+    next({
+      status: 400,
+      message: `vin ${req.body.vin} is invalid`
+    })
   }
+  
 }
+
+// -----OR-------------------------------------------
+
+// async function checkVinNumberValid (req, res, next) {
+//   const { vin } = req.body;
+//   try {
+//     var isValidVin = vinValidator.validate(vin);
+//     if (!isValidVin) {
+//       next({ status: 400, message: `vin ${vin} is invalid` });
+//     } else {
+//       next();
+//     }
+//   } catch (err) {
+//     next(err);
+//   }
+// }
+
+
 
 async function checkVinNumberUnique(req, res, next) {
   const { vin } = req.body;
@@ -68,7 +84,6 @@ async function checkVinNumberUnique(req, res, next) {
     next(err);
   }
 }
-
 
 module.exports = {
   handleError,
