@@ -33,6 +33,19 @@ router.post('/', checkCarPayload, checkVinNumberUnique, checkVinNumberValid ,(re
     .catch(next);
 })
 
+router.put(
+  '/:id', 
+  checkCarId, 
+  checkCarPayload,
+  checkVinNumberValid,
+  (req, res, next) => {
+    Cars.updateById(req.params.id, req.body)
+      .then(updated => {
+        res.status(200).json(updated)
+      })
+      .catch(next);
+})
+
 
 
 router.use(handleError)
