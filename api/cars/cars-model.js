@@ -25,9 +25,16 @@ const updateById = async (id, car) => {
   return getById(id)
 }
 
+const deleteById = id => {
+  return db('cars')
+    .where('id', id)
+    .del()
+}
+
 module.exports = {
   getAll,
   getById,
   create,
   updateById,
+  deleteById,
 }

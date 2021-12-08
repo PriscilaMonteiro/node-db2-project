@@ -46,6 +46,23 @@ router.put(
       .catch(next);
 })
 
+// router.delete('/:id', checkCarId, (req, res, next) => {
+//   Cars.deleteById(req.params.id)
+//     .then(() =>{
+//       res.status(200).json({});
+//     })
+//     .catch(next);
+// })
+
+router.delete('/:id', checkCarId, async (req, res, next) => {
+  try {
+    const data = await Cars.deleteById(req.params.id)
+    res.json(data)
+  } catch (err) {
+    next(err)
+  }
+})
+
 
 
 router.use(handleError)
